@@ -1,336 +1,139 @@
-name: Build Android Release APK & AAB
+
+name: Build Worldplay Android APK and AAB
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build-android:
-    name: Build Signed APK and AAB
+    name: Build and Verify Android
     runs-on: ubuntu-latest
 
     steps:
-      - name: 1. Checkout Repository Source Code
+      - name: 1. Checkout
         uses: actions/checkout@v4
 
-      - name: 2. Set up Node.js 20
+      - name: 2. Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
 
-      - name: 3. Install Dependencies & Build Web Game Asset
+      - name: 3. Install web dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: 4. Build web game for Android WebView
         run: |
-          npm ci || npm install
-          npm run build
+          npx vite build --base=./
           mkdir -p app/src/main/assets
-          if [ -d "dist" ]; then
-            cp -r dist/* app/src/main/assets/
-          fi
+          cp -r dist/. app/src/main/assets/
 
-      - name: 4. Set up Java JDK 17
+      - name: 5. Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
 
-      - name: 5. Scaffold Android Project Structure (Auto-Guarantee)
+      - name: 6. Prepare Android resources
         run: |
-          # 5.1 Root build.gradle
-          if [ ! -f "build.gradle" ]; then
-            cat << 'EOF' > build.gradle
-          buildscript {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-              dependencies {
-                  classpath 'com.android.tools.build:gradle:7.4.2'
-              }
-          }
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
-          task clean(type: Delete) {
-              delete rootProject.buildDir
-          }
+          mkdir -p app/src/main/res/drawable
+
+          cat > app/src/main/res/drawable/ic_launcher.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="48dp"
+              android:height="48dp"
+              android:viewportWidth="48"
+              android:viewportHeight="48">
+              <path
+                  android:fillColor="#FFFFFF"
+                  android:pathData="M0,0h48v48h-48z"/>
+              <path
+                  android:fillColor="#172554"
+                  android:pathData="M24,5 L29,16 L41,17 L32,25 L35,38 L24,32 L13,38 L16,25 L7,17 L19,16 Z"/>
+          </vector>
           EOF
-          fi
 
-          # 5.2 settings.gradle
-          if [ ! -f "settings.gradle" ]; then
-            cat << 'EOF' > settings.gradle
-          pluginManagement {
-              repositories {
-                  google()
-                  mavenCentral()
-                  gradlePluginPortal()
-              }
-          }
-          dependencyResolutionManagement {
-              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
-          rootProject.name = "Worldplay"
-          include ':app'
-          EOF
-          fi
+          sed -i \
+            -e 's|@mipmap/ic_launcher|@drawable/ic_launcher|g' \
+            app/src/main/AndroidManifest.xml
 
-          # 5.3 app/build.gradle
-          mkdir -p app
-          if [ ! -f "app/build.gradle" ]; then
-            cat << 'EOF' > app/build.gradle
-          plugins {
-              id 'com.android.application'
-          }
-
-          android {
-              namespace 'com.worldplay.game'
-              compileSdk 33
-
-              defaultConfig {
-                  applicationId "com.worldplay.game"
-                  minSdk 21
-                  targetSdk 33
-                  versionCode 1
-                  versionName "1.4.0"
-              }
-
-              signingConfigs {
-                  release {
-                      def keystoreFile = file(System.getenv("KEYSTORE_PATH") ?: "release.keystore")
-                      if (keystoreFile.exists()) {
-                          storeFile keystoreFile
-                          storePassword System.getenv("KEYSTORE_PASSWORD") ?: "worldplay123"
-                          keyAlias System.getenv("KEY_ALIAS") ?: "worldplay"
-                          keyPassword System.getenv("KEY_PASSWORD") ?: "worldplay123"
-                      } else {
-                          storeFile file("${System.getProperty('user.home')}/.android/debug.keystore")
-                          storePassword "android"
-                          keyAlias "androiddebugkey"
-                          keyPassword "android"
-                      }
-                  }
-              }
-
-              buildTypes {
-                  release {
-                      signingConfig signingConfigs.release
-                      minifyEnabled false
-                      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-                  }
-              }
-
-              compileOptions {
-                  sourceCompatibility JavaVersion.VERSION_1_8
-                  targetCompatibility JavaVersion.VERSION_1_8
-              }
-
-              bundle {
-                  language { enableSplit = false }
-                  density { enableSplit = true }
-                  abi { enableSplit = true }
-              }
-          }
-          EOF
-          fi
-
-          # 5.4 AndroidManifest.xml
-          mkdir -p app/src/main
-          if [ ! -f "app/src/main/AndroidManifest.xml" ]; then
-            cat << 'EOF' > app/src/main/AndroidManifest.xml
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-              package="com.worldplay.game">
-              <uses-permission android:name="android.permission.INTERNET" />
-              <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-              <uses-permission android:name="android.permission.VIBRATE" />
-              <application
-                  android:allowBackup="true"
-                  android:label="همجهان"
-                  android:supportsRtl="true"
-                  android:hardwareAccelerated="true"
-                  android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
-                  <activity
-                      android:name=".MainActivity"
-                      android:exported="true"
-                      android:screenOrientation="portrait">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-              </application>
-          </manifest>
-          EOF
-          fi
-
-          # 5.5 MainActivity.java
-          mkdir -p app/src/main/java/com/worldplay/game
-          if [ ! -f "app/src/main/java/com/worldplay/game/MainActivity.java" ]; then
-            cat << 'EOF' > app/src/main/java/com/worldplay/game/MainActivity.java
-          package com.worldplay.game;
-
-          import android.annotation.SuppressLint;
-          import android.app.Activity;
-          import android.content.Context;
-          import android.os.Build;
-          import android.os.Bundle;
-          import android.os.VibrationEffect;
-          import android.os.Vibrator;
-          import android.view.View;
-          import android.view.Window;
-          import android.view.WindowManager;
-          import android.webkit.JavascriptInterface;
-          import android.webkit.WebChromeClient;
-          import android.webkit.WebResourceRequest;
-          import android.webkit.WebSettings;
-          import android.webkit.WebView;
-          import android.webkit.WebViewClient;
-          import android.widget.Toast;
-
-          public class MainActivity extends Activity {
-              private WebView webView;
-              private Vibrator vibrator;
-
-              @Override
-              @SuppressLint("SetJavaScriptEnabled")
-              protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-                  requestWindowFeature(Window.FEATURE_NO_TITLE);
-                  getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-                  getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-                  vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-                  webView = new WebView(this);
-                  setContentView(webView);
-
-                  WebSettings s = webView.getSettings();
-                  s.setJavaScriptEnabled(true);
-                  s.setDomStorageEnabled(true);
-                  s.setDatabaseEnabled(true);
-                  s.setAllowFileAccess(true);
-                  s.setAllowContentAccess(true);
-                  s.setUseWideViewPort(true);
-                  s.setLoadWithOverviewMode(true);
-                  s.setMediaPlaybackRequiresUserGesture(false);
-
-                  webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-                  webView.addJavascriptInterface(new AndroidBridge(this), "AndroidBridge");
-                  webView.setWebChromeClient(new WebChromeClient());
-                  webView.setWebViewClient(new WebViewClient() {
-                      @Override
-                      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) { return false; }
-                  });
-                  webView.loadUrl("file:///android_asset/index.html");
-              }
-
-              public class AndroidBridge {
-                  private final Context ctx;
-                  public AndroidBridge(Context ctx) { this.ctx = ctx; }
-
-                  @JavascriptInterface
-                  public void vibrate(long ms) {
-                      if (vibrator != null && vibrator.hasVibrator()) {
-                          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                              vibrator.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE));
-                          } else {
-                              vibrator.vibrate(ms);
-                          }
-                      }
-                  }
-
-                  @JavascriptInterface
-                  public void showToast(String msg) {
-                      runOnUiThread(() -> Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show());
-                  }
-              }
-
-              @Override
-              public void onBackPressed() {
-                  if (webView != null && webView.canGoBack()) {
-                      webView.goBack();
-                  } else {
-                      super.onBackPressed();
-                  }
-              }
-          }
-          EOF
-          fi
-
-      - name: 6. Setup Gradle Wrapper
+      - name: 7. Setup Gradle
         run: |
-          if [ ! -f "gradlew" ]; then
-            echo "Downloading standalone Gradle 7.4.2..."
-            wget -q https://services.gradle.org/distributions/gradle-7.4.2-bin.zip
-            unzip -q gradle-7.4.2-bin.zip
-            ./gradle-7.4.2/bin/gradle wrapper --gradle-version 7.4.2
+          if [ ! -f gradlew ]; then
+            wget -q https://services.gradle.org/distributions/gradle-7.5.1-bin.zip
+            unzip -q gradle-7.5.1-bin.zip
+            ./gradle-7.5.1/bin/gradle wrapper \
+              --gradle-version 7.5.1
           fi
           chmod +x gradlew
 
-      - name: 7. Generate Production Keystore (Automated Fallback)
+      - name: 8. Build Debug APK
+        run: ./gradlew --no-daemon assembleDebug
+
+      - name: 9. Verify Debug APK exists
         run: |
-          mkdir -p app
-          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
-            echo "Using user-defined GitHub Secret Keystore..."
-            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/release.keystore
-            echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
-            echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
-            echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
-          else
-            echo "Self-generating release keystore..."
-            keytool -genkeypair -v \
-              -keystore app/release.keystore \
-              -alias worldplay \
-              -keyalg RSA \
-              -keysize 2048 \
-              -validity 10000 \
-              -storepass worldplay123 \
-              -keypass worldplay123 \
-              -dname "CN=Worldplay, OU=Mobile, O=WorldplayGame, L=Tehran, ST=Tehran, C=IR"
-            echo "KEYSTORE_PASSWORD=worldplay123" >> $GITHUB_ENV
-            echo "KEY_ALIAS=worldplay" >> $GITHUB_ENV
-            echo "KEY_PASSWORD=worldplay123" >> $GITHUB_ENV
-          fi
-          echo "KEYSTORE_PATH=release.keystore" >> $GITHUB_ENV
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          ls -lh "$APK"
 
-      - name: 8. Build Signed Release APK
-        run: ./gradlew assembleRelease --stacktrace
-
-      - name: 9. Build Signed Release AAB (Google Play / Bazaar Bundle)
-        run: ./gradlew bundleRelease --stacktrace
-
-      - name: 10. Locate Artifact Files
-        id: find_files
-        run: |
-          APK_FILE=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
-          AAB_FILE=$(find app/build/outputs/bundle/release -name "*.aab" | head -n 1)
-          echo "Found APK: $APK_FILE"
-          echo "Found AAB: $AAB_FILE"
-          echo "apk_path=$APK_FILE" >> $GITHUB_OUTPUT
-          echo "aab_path=$AAB_FILE" >> $GITHUB_OUTPUT
-
-      - name: 11. Upload Release APK Artifact
+      - name: 10. Upload installable Debug APK
         uses: actions/upload-artifact@v4
-        if: steps.find_files.outputs.apk_path != ''
         with:
-          name: Worldplay-Release-APK
-          path: ${{ steps.find_files.outputs.apk_path }}
+          name: Worldplay-Debug-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: 11. Configure release signing
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          test -n "$KEYSTORE_PASSWORD"
+          test -n "$KEY_ALIAS"
+          test -n "$KEY_PASSWORD"
+
+          echo "$KEYSTORE_BASE64" | base64 --decode \
+            > app/release.keystore
+
+          keytool -list \
+            -keystore app/release.keystore \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -alias "$KEY_ALIAS"
+
+          echo "KEYSTORE_PATH=release.keystore" >> "$GITHUB_ENV"
+          echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
+          echo "KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+
+      - name: 12. Build signed Release APK and AAB
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        run: |
+          ./gradlew --no-daemon assembleRelease bundleRelease
+
+      - name: 13. Upload signed Release APK
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Worldplay-Signed-Release-APK
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
           retention-days: 30
 
-      - name: 12. Upload Release AAB (Bundle) Artifact
+      - name: 14. Upload signed Release AAB
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
         uses: actions/upload-artifact@v4
-        if: steps.find_files.outputs.aab_path != ''
         with:
-          name: Worldplay-Release-AAB
-          path: ${{ steps.find_files.outputs.aab_path }}
+          name: Worldplay-Signed-Release-AAB
+          path: app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
           retention-days: 30
