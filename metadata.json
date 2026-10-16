@@ -1,0 +1,6 @@
+{
+  "name": "Worldplay Chess - همجهان شطرنج",
+  "description": "Fast-paced bilingual (Persian & English) chess game featuring tactical time booster cards, responsive wood & marble boards, move history, and audio feedback.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
