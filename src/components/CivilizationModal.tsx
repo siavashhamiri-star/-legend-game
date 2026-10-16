@@ -9,6 +9,8 @@ interface CivilizationModalProps {
   onClose: () => void;
   currentPieceStyle: PieceStyle;
   currentBoardTheme: BoardTheme;
+  enableMetallurgy?: boolean;
+  onToggleMetallurgy?: () => void;
   onSelectCivilization: (pieceStyle: PieceStyle, boardTheme: BoardTheme) => void;
   t: TranslationDictionary;
   lang: 'fa' | 'en';
@@ -18,6 +20,8 @@ export const CivilizationModal: React.FC<CivilizationModalProps> = ({
   isOpen,
   onClose,
   currentPieceStyle,
+  enableMetallurgy = false,
+  onToggleMetallurgy,
   onSelectCivilization,
   lang
 }) => {
@@ -52,6 +56,92 @@ export const CivilizationModal: React.FC<CivilizationModalProps> = ({
           >
             <X size={18} />
           </button>
+        </div>
+
+        {/* Metallurgy Fusion Showcase Bar */}
+        <div className="mx-4 mt-3 p-3 rounded-xl bg-gradient-to-r from-amber-950/60 via-stone-900/90 to-amber-900/50 border border-amber-500/40 shadow-md">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">⚗️</span>
+              <div>
+                <h4 className="text-xs font-black text-amber-300 flex items-center gap-1.5">
+                  <span>{lang === 'fa' ? 'ادغام عناصر و فلزات کیمیاگری در مهره‌ها' : 'Alchemical Metallurgy Fusion'}</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-200 border border-amber-500/30 font-mono">
+                    VIP Mode
+                  </span>
+                </h4>
+                <p className="text-[11px] text-stone-300">
+                  {lang === 'fa'
+                    ? 'شاه: طلایی | ملکه: نقره‌ای | فیل: برنزی | اسب: چوبی | رخ: آلومینیومی | سرباز: آهنی'
+                    : 'King: Gold | Queen: Silver | Bishop: Bronze | Knight: Wood | Rook: Aluminum | Pawn: Iron'}
+                </p>
+              </div>
+            </div>
+
+            {onToggleMetallurgy && (
+              <button
+                onClick={onToggleMetallurgy}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                  enableMetallurgy
+                    ? 'bg-amber-500 text-stone-950 shadow-amber-500/30'
+                    : 'bg-stone-800 hover:bg-stone-700 text-stone-300 border border-stone-600'
+                }`}
+              >
+                <Sparkles size={13} />
+                <span>
+                  {enableMetallurgy
+                    ? (lang === 'fa' ? 'عناصر فعال است ✓' : 'Fused Active ✓')
+                    : (lang === 'fa' ? 'فعال‌سازی در تمدن‌ها' : 'Enable Metallurgy')}
+                </span>
+              </button>
+            )}
+          </div>
+
+          {/* 6 Preview Pieces */}
+          <div className="grid grid-cols-6 gap-1.5 mt-2.5 pt-2 border-t border-amber-500/20">
+            <div className="flex flex-col items-center p-1 rounded bg-stone-900/70 border border-amber-500/30">
+              <div className="w-7 h-7">
+                <ChessPiece type="k" color="w" style="alchemy" enableMetallurgy={true} />
+              </div>
+              <span className="text-[9px] font-bold text-amber-300 mt-0.5">{lang === 'fa' ? 'طلایی' : 'Gold'}</span>
+              <span className="text-[8px] text-stone-400">{lang === 'fa' ? 'شاه' : 'King'}</span>
+            </div>
+            <div className="flex flex-col items-center p-1 rounded bg-stone-900/70 border border-slate-400/30">
+              <div className="w-7 h-7">
+                <ChessPiece type="q" color="w" style="alchemy" enableMetallurgy={true} />
+              </div>
+              <span className="text-[9px] font-bold text-slate-200 mt-0.5">{lang === 'fa' ? 'نقره‌ای' : 'Silver'}</span>
+              <span className="text-[8px] text-stone-400">{lang === 'fa' ? 'ملکه' : 'Queen'}</span>
+            </div>
+            <div className="flex flex-col items-center p-1 rounded bg-stone-900/70 border border-amber-700/30">
+              <div className="w-7 h-7">
+                <ChessPiece type="b" color="w" style="alchemy" enableMetallurgy={true} />
+              </div>
+              <span className="text-[9px] font-bold text-amber-500 mt-0.5">{lang === 'fa' ? 'برنزی' : 'Bronze'}</span>
+              <span className="text-[8px] text-stone-400">{lang === 'fa' ? 'فیل' : 'Bishop'}</span>
+            </div>
+            <div className="flex flex-col items-center p-1 rounded bg-stone-900/70 border border-yellow-800/30">
+              <div className="w-7 h-7">
+                <ChessPiece type="n" color="w" style="alchemy" enableMetallurgy={true} />
+              </div>
+              <span className="text-[9px] font-bold text-amber-600 mt-0.5">{lang === 'fa' ? 'چوبی' : 'Wood'}</span>
+              <span className="text-[8px] text-stone-400">{lang === 'fa' ? 'اسب' : 'Knight'}</span>
+            </div>
+            <div className="flex flex-col items-center p-1 rounded bg-stone-900/70 border border-slate-300/30">
+              <div className="w-7 h-7">
+                <ChessPiece type="r" color="w" style="alchemy" enableMetallurgy={true} />
+              </div>
+              <span className="text-[9px] font-bold text-slate-300 mt-0.5">{lang === 'fa' ? 'آلومینیوم' : 'Alloy'}</span>
+              <span className="text-[8px] text-stone-400">{lang === 'fa' ? 'رخ' : 'Rook'}</span>
+            </div>
+            <div className="flex flex-col items-center p-1 rounded bg-stone-900/70 border border-zinc-500/30">
+              <div className="w-7 h-7">
+                <ChessPiece type="p" color="w" style="alchemy" enableMetallurgy={true} />
+              </div>
+              <span className="text-[9px] font-bold text-stone-300 mt-0.5">{lang === 'fa' ? 'آهنی' : 'Iron'}</span>
+              <span className="text-[8px] text-stone-400">{lang === 'fa' ? 'پیاده' : 'Pawn'}</span>
+            </div>
+          </div>
         </div>
 
         {/* Civilization Cards List */}

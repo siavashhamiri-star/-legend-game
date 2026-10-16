@@ -6,6 +6,7 @@ interface ChessPieceProps {
   color: Color;
   style?: PieceStyle;
   className?: string;
+  enableMetallurgy?: boolean;
 }
 
 const GLYPHS: Record<string, string> = {
@@ -17,7 +18,8 @@ export const ChessPiece: React.FC<ChessPieceProps> = ({
   type,
   color,
   style = 'achaemenid',
-  className = ''
+  className = '',
+  enableMetallurgy = false
 }) => {
   const isWhite = color === 'w';
 
@@ -128,9 +130,78 @@ export const ChessPiece: React.FC<ChessPieceProps> = ({
     );
   }
 
-  // 3. World Civilization Styles (Achaemenid Persia, Arthurian England, Imperial Rome, Olympus Greece, Pharaoh Egypt, Shogun Japan, Arabia, Nordic)
-  // Palette gradients based on chosen civilization
+  // 3. World Civilization Styles & Alchemical Metallurgy Elements
+  // Palette gradients based on chosen civilization or alchemical metallurgy elements
+  const isMetallurgy = enableMetallurgy || style === 'alchemy';
+
   const getThemeGrads = () => {
+    // Six Alchemical Metallurgy Materials: Gold King, Silver Queen, Bronze Bishop, Wood Knight, Aluminum Rook, Iron Pawn
+    if (isMetallurgy) {
+      switch (type) {
+        case 'k': // طلای ناب شاهنشاهی (Imperial Pure Gold)
+          return {
+            primaryLight: ['#fffbeb', '#fde047', '#d97706'],
+            primaryDark: ['#fbbf24', '#b45309', '#451a03'],
+            crownLight: ['#ffffff', '#fde047', '#b45309'],
+            crownDark: ['#fde68a', '#d97706', '#78350f'],
+            accent: '#f59e0b',
+            strokeLight: '#78350f',
+            strokeDark: '#290f02'
+          };
+        case 'q': // نقره صیقلی، پلاتین و الکتروم ملکه/وزیر (Royal Silver & Platinum)
+          return {
+            primaryLight: ['#ffffff', '#f1f5f9', '#94a3b8'],
+            primaryDark: ['#cbd5e1', '#64748b', '#1e293b'],
+            crownLight: ['#ffffff', '#fef08a', '#cbd5e1'],
+            crownDark: ['#e2e8f0', '#94a3b8', '#334155'],
+            accent: '#38bdf8',
+            strokeLight: '#334155',
+            strokeDark: '#0f172a'
+          };
+        case 'b': // برنز کهن و زردرنگ اساطیری فیل (Antique Mythic Bronze)
+          return {
+            primaryLight: ['#fef3c7', '#d97706', '#92400e'],
+            primaryDark: ['#b45309', '#78350f', '#351404'],
+            crownLight: ['#fef08a', '#ca8a04', '#78350f'],
+            crownDark: ['#d97706', '#92400e', '#451a03'],
+            accent: '#10b981',
+            strokeLight: '#451a03',
+            strokeDark: '#1c0801'
+          };
+        case 'n': // چوب خراطی‌شده نفیس ساج، آبنوس و گردوی اسب (Carved Artisan Hardwood)
+          return {
+            primaryLight: ['#fef3c7', '#d97706', '#78350f'],
+            primaryDark: ['#78350f', '#451a03', '#1c0701'],
+            crownLight: ['#fef3c7', '#d97706', '#b45309'],
+            crownDark: ['#92400e', '#542609', '#240d02'],
+            accent: '#ca8a04',
+            strokeLight: '#451a03',
+            strokeDark: '#0f0300'
+          };
+        case 'r': // آلومینیوم صیقلی، تیتانیوم و آلیاژ فلزی رخ (Brushed Aluminum & Titanium)
+          return {
+            primaryLight: ['#ffffff', '#f1f5f9', '#cbd5e1'],
+            primaryDark: ['#94a3b8', '#475569', '#1e293b'],
+            crownLight: ['#ffffff', '#e2e8f0', '#94a3b8'],
+            crownDark: ['#cbd5e1', '#64748b', '#334155'],
+            accent: '#0284c7',
+            strokeLight: '#475569',
+            strokeDark: '#0f172a'
+          };
+        case 'p': // آهن چکش‌خورده دمشقی و فولاد فورج‌شده سرباز (Forged Damascus Iron & Steel)
+        default:
+          return {
+            primaryLight: ['#f1f5f9', '#94a3b8', '#475569'],
+            primaryDark: ['#475569', '#1e293b', '#090d16'],
+            crownLight: ['#ffffff', '#cbd5e1', '#64748b'],
+            crownDark: ['#64748b', '#334155', '#1e293b'],
+            accent: '#ef4444',
+            strokeLight: '#1e293b',
+            strokeDark: '#020617'
+          };
+      }
+    }
+
     switch (style) {
       case 'england':
         return {
@@ -232,6 +303,16 @@ export const ChessPiece: React.FC<ChessPieceProps> = ({
           strokeLight: '#064e3b',
           strokeDark: '#021b14'
         };
+      case 'russia':
+        return {
+          primaryLight: ['#ffffff', '#f8fafc', '#e2e8f0'], // Imperial Winter Ermine & Diamond
+          primaryDark: ['#1e3a8a', '#1e1b4b', '#0f172a'], // Imperial Russian Imperial Navy & Sapphire
+          crownLight: ['#fde047', '#eab308', '#ca8a04'], // Romanov Crown Gold
+          crownDark: ['#ca8a04', '#991b1b', '#450a0a'],
+          accent: '#06b6d4', // St. Petersburg Winter Malachite / Ice
+          strokeLight: '#1e3a8a',
+          strokeDark: '#0f172a'
+        };
       case 'achaemenid':
       default:
         return {
@@ -250,8 +331,8 @@ export const ChessPiece: React.FC<ChessPieceProps> = ({
   const gradColors = isWhite ? themeConfig.primaryLight : themeConfig.primaryDark;
   const crownColors = isWhite ? themeConfig.crownLight : themeConfig.crownDark;
   const strokeCol = isWhite ? themeConfig.strokeLight : themeConfig.strokeDark;
-  const gradId = `civ_grad_${style}_${color}_${type}`;
-  const crownGradId = `civ_crown_${style}_${color}_${type}`;
+  const gradId = `civ_grad_${style}_${color}_${type}${isMetallurgy ? '_metal' : ''}`;
+  const crownGradId = `civ_crown_${style}_${color}_${type}${isMetallurgy ? '_metal' : ''}`;
 
   return (
     <svg
@@ -398,6 +479,18 @@ export const ChessPiece: React.FC<ChessPieceProps> = ({
             </g>
           )}
 
+          {style === 'russia' && (
+            // Tsar Peter the Great (کلاه مونوماخ و تاج امپراتوری رومانوف با صلیب زرین ارتدکس)
+            <g>
+              <ellipse cx="50" cy="28" rx="19" ry="14" fill={`url(#${crownGradId})`} />
+              <path d="M30 38 Q50 28 70 38" stroke={strokeCol} strokeWidth="2.5" fill="none" />
+              {/* Orthodox Imperial Cross */}
+              <path d="M50 8 L50 20 M44 13 L56 13 M46 17 L54 18" stroke="#facc15" strokeWidth="2" />
+              <circle cx="50" cy="8" r="2" fill="#38bdf8" />
+              <circle cx="50" cy="26" r="3" fill="#ef4444" />
+            </g>
+          )}
+
           <path d="M45 42 Q50 48 55 42" stroke={strokeCol} strokeWidth="2" />
         </g>
       )}
@@ -408,7 +501,17 @@ export const ChessPiece: React.FC<ChessPieceProps> = ({
           <path d="M22 88 h56 v-8 c-5 -3 -12 -5 -28 -5 s-23 2 -28 5 z" fill={`url(#${gradId})`} />
           <path d="M30 75 C26 55 36 42 50 42 C64 42 74 55 70 75 Z" fill={`url(#${gradId})`} />
           {/* Empress / Queen Diadem */}
-          {style === 'india' ? (
+          {style === 'russia' ? (
+            // Empress Catherine the Great (تاج الماس امپراتوری سن پترزبورگ و کوکوشنیک سلطنتی)
+            <g>
+              <path d="M26 40 C30 10 70 10 74 40 Z" fill={`url(#${crownGradId})`} />
+              <path d="M34 26 C44 14 56 14 66 26" stroke="#ffffff" strokeWidth="2" fill="none" />
+              <circle cx="50" cy="12" r="3.5" fill="#38bdf8" stroke="#facc15" strokeWidth="1" />
+              <circle cx="38" cy="20" r="2.5" fill="#facc15" />
+              <circle cx="62" cy="20" r="2.5" fill="#facc15" />
+              <circle cx="50" cy="26" r="3" fill="#e11d48" />
+            </g>
+          ) : style === 'india' ? (
             // Empress Hawa Begum / Jodha (زیور پیشانی منگ‌تیکا و تاج مروارید گورکانی)
             <g>
               <path d="M26 40 C30 14 70 14 74 40 Z" fill={`url(#${crownGradId})`} />
@@ -492,7 +595,14 @@ export const ChessPiece: React.FC<ChessPieceProps> = ({
           <path d="M28 88 h44 v-7 c-4 -3 -8 -4 -22 -4 s-18 1 -22 4 z" fill={`url(#${gradId})`} />
           <path d="M36 77 C34 62 38 48 50 48 C62 48 66 62 64 77 Z" fill={`url(#${gradId})`} />
           <circle cx="50" cy="34" r="14" fill={`url(#${crownGradId})`} />
-          {style === 'india' ? (
+          {style === 'russia' ? (
+            // Russian Streltsy & Cossack Astrakhan Fur Hat (کلاه استراخان قزاق و محافظ تزار)
+            <g>
+              <ellipse cx="50" cy="26" rx="15" ry="11" fill={`url(#${crownGradId})`} />
+              <path d="M35 32 Q50 26 65 32" stroke="#ffffff" strokeWidth="2.5" fill="none" />
+              <circle cx="50" cy="22" r="2.5" fill="#ef4444" />
+            </g>
+          ) : style === 'india' ? (
             // Gurkani Rajput Turban (دستار سرباز گورکانی)
             <g>
               <ellipse cx="50" cy="28" rx="14" ry="10" fill={`url(#${crownGradId})`} />

@@ -40,6 +40,8 @@ import { TreasuryModal } from './components/TreasuryModal.tsx';
 import { LegalDisclaimerModal } from './components/LegalDisclaimerModal.tsx';
 import { CommunityRewardModal } from './components/CommunityRewardModal.tsx';
 import { CivilizationModal } from './components/CivilizationModal.tsx';
+import { AndroidBuildModal } from './components/AndroidBuildModal.tsx';
+import { CIVILIZATIONS } from './utils/civilizations.ts';
 import {
   RotateCcw,
   RefreshCw,
@@ -52,7 +54,9 @@ import {
   Coins,
   Scale,
   Gift,
-  Globe2
+  Globe2,
+  Smartphone,
+  Sparkles
 } from 'lucide-react';
 
 const BOOSTERS_CONFIG: Record<BoosterTier, number> = {
@@ -77,6 +81,17 @@ export default function App() {
   const [pieceStyle, setPieceStyle] = useState<PieceStyle>('achaemenid');
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [enableMetallurgy, setEnableMetallurgy] = useState<boolean>(() => {
+    return localStorage.getItem('worldplay_enable_metallurgy') === 'true';
+  });
+
+  const handleToggleMetallurgy = () => {
+    setEnableMetallurgy(prev => {
+      const next = !prev;
+      localStorage.setItem('worldplay_enable_metallurgy', String(next));
+      return next;
+    });
+  };
 
   // Player Profile & Economy (Connected to /api/scores, /api/claim-reward, /api/verify-purchase)
   const [playerName] = useState<string>(() => localStorage.getItem('worldplay_player_name') || 'فرمانده_پارس');
@@ -98,6 +113,9 @@ export default function App() {
   const [showDisclaimer, setShowDisclaimer] = useState<boolean>(false);
   const [showCommunity, setShowCommunity] = useState<boolean>(false);
   const [showCivilizations, setShowCivilizations] = useState<boolean>(false);
+  const [showAndroidModal, setShowAndroidModal] = useState<boolean>(false);
+  const [aiTip, setAiTip] = useState<string | null>(null);
+  const [loadingAiTip, setLoadingAiTip] = useState<boolean>(false);
 
   // VIP In-Game Perks unlocked via Socials
   const [unlockedPlatinum, setUnlockedPlatinum] = useState<boolean>(() => {
@@ -529,6 +547,36 @@ export default function App() {
     setFlipped(prev => !prev);
   };
 
+  // Automated AI Strategy Advisor (Powered by server-side Gemini 2.5 Flash)
+  const handleConsultAiOracle = async () => {
+    if (loadingAiTip) return;
+    setLoadingAiTip(true);
+    try {
+      const res = await fetch('/api/ai-oracle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fen: game.fen(),
+          civilization: pieceStyle,
+          lastMove: lastMove ? `${lastMove.from} -> ${lastMove.to}` : 'opening',
+          lang
+        })
+      });
+      const data = await res.json();
+      if (data?.tip) {
+        setAiTip(data.tip);
+      }
+    } catch {
+      setAiTip(
+        lang === 'fa'
+          ? 'مشاور خردمند: مرکز میدان را با سربازان مهار کنید و از جناحین غافل نشوید.'
+          : 'Wise Advisor: Control the center squares and keep your king safeguarded.'
+      );
+    } finally {
+      setLoadingAiTip(false);
+    }
+  };
+
   // Economy Helpers
   const handleAddCoins = (amount: number) => {
     const updated = Math.max(0, coins + amount);
@@ -626,6 +674,34 @@ export default function App() {
               aria-label={t.academy}
             >
               <BookOpen size={16} />
+            </button>
+
+            {/* World Civilizations Selector Button */}
+            <button
+              onClick={() => setShowCivilizations(true)}
+              className="p-1.5 px-2.5 rounded-lg bg-amber-950/70 hover:bg-amber-900 border border-amber-500/80 text-amber-200 transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm ring-1 ring-amber-500/40"
+              title={t.civilizationsBtn}
+              aria-label={t.civilizationsBtn}
+            >
+              <span className="text-base leading-none">
+                {CIVILIZATIONS.find(c => c.id === pieceStyle)?.flag || '🌍'}
+              </span>
+              <span className="font-bold text-xs hidden xs:inline">
+                {t.civilizationsBtn}
+              </span>
+            </button>
+
+            {/* Android APK & Release Hub Button */}
+            <button
+              onClick={() => setShowAndroidModal(true)}
+              className="p-1.5 px-2 rounded-lg bg-[#12281d] hover:bg-[#1a3c2c] border border-emerald-500/70 text-emerald-300 transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
+              title={t.androidApkBtn}
+              aria-label={t.androidApkBtn}
+            >
+              <Smartphone size={15} className="text-emerald-400" />
+              <span className="font-bold text-xs hidden sm:inline">
+                APK & Gradle
+              </span>
             </button>
 
             {/* Leagues Button */}
@@ -746,8 +822,19 @@ export default function App() {
                 onChange={e => setBoardTheme(e.target.value as BoardTheme)}
                 className="w-full bg-[#2a231d] border border-stone-700 rounded-md p-1.5 text-stone-200 cursor-pointer focus:outline-none"
               >
+                <option value="taj_mahal">{t.tajMahalTheme}</option>
+                <option value="hermitage">{t.hermitageTheme}</option>
+                <option value="topkapi">{t.topkapiTheme}</option>
+                <option value="forbidden_city">{t.forbiddenCityTheme}</option>
                 <option value="apadana">{t.apadanaTheme}</option>
                 <option value="persepolis">{t.persepolisTheme}</option>
+                <option value="camelot">{t.windsorTheme}</option>
+                <option value="colosseum">{t.colosseumTheme}</option>
+                <option value="olympus">{t.parthenonTheme}</option>
+                <option value="pyramids">{t.pyramidsTheme}</option>
+                <option value="sakura">{t.sakuraTheme}</option>
+                <option value="petra">{t.petraTheme}</option>
+                <option value="fjords">{t.fjordsTheme}</option>
                 <option value="walnut">{t.walnutTheme}</option>
                 <option value="emerald">{t.emeraldTheme}</option>
                 <option value="slate">{t.slateTheme}</option>
@@ -764,7 +851,19 @@ export default function App() {
                 onChange={e => setPieceStyle(e.target.value as PieceStyle)}
                 className="w-full bg-[#2a231d] border border-stone-700 rounded-md p-1.5 text-stone-200 cursor-pointer focus:outline-none"
               >
+                <option value="india">{t.indiaStyle}</option>
+                <option value="russia">{t.russiaStyle}</option>
                 <option value="achaemenid">{t.achaemenidStyle}</option>
+                <option value="ottoman">{t.ottomanStyle}</option>
+                <option value="alchemy">{t.alchemyStyle}</option>
+                <option value="china">{t.chinaStyle}</option>
+                <option value="england">{t.englandStyle}</option>
+                <option value="rome">{t.romeStyle}</option>
+                <option value="greece">{t.greeceStyle}</option>
+                <option value="egypt">{t.egyptStyle}</option>
+                <option value="japan">{t.japanStyle}</option>
+                <option value="arabia">{t.arabiaStyle}</option>
+                <option value="nordic">{t.nordicStyle}</option>
                 <option value="vector">{t.vectorStyle}</option>
                 <option value="classic">{t.classicStyle}</option>
               </select>
@@ -789,6 +888,39 @@ export default function App() {
                 <option value={60}>60s (Relaxed)</option>
               </select>
             </div>
+
+            {/* Alchemical Metallurgy Switcher */}
+            <div className="col-span-2 sm:col-span-4 flex items-center justify-between p-2.5 rounded-lg bg-gradient-to-r from-amber-950/40 via-stone-900/60 to-amber-900/30 border border-amber-700/40 mt-1">
+              <div className="flex items-center gap-2">
+                <span className="text-base">⚗️</span>
+                <div>
+                  <div className="font-bold text-amber-300 text-xs flex items-center gap-1.5">
+                    <span>{t.metallurgyFusion}</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      شاه طلا، ملکه نقره، فیل برنز، اسب چوب، رخ آلومینیوم، پیاده آهن
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-stone-400">
+                    {t.metallurgyDesc}
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleToggleMetallurgy}
+                className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  enableMetallurgy ? 'bg-amber-500' : 'bg-stone-700'
+                }`}
+                role="switch"
+                aria-checked={enableMetallurgy}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                    enableMetallurgy ? (lang === 'fa' ? '-translate-x-5' : 'translate-x-5') : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         )}
 
@@ -809,6 +941,7 @@ export default function App() {
           capturedWhite={capturedWhite}
           capturedBlack={capturedBlack}
           pieceStyle={pieceStyle}
+          enableMetallurgy={enableMetallurgy}
         />
 
         {/* Chess Board Container */}
@@ -821,6 +954,7 @@ export default function App() {
             flipped={flipped}
             theme={boardTheme}
             pieceStyle={pieceStyle}
+            enableMetallurgy={enableMetallurgy}
             onSquareClick={handleSquareClick}
             isGameOver={isGameOver}
           />
@@ -870,6 +1004,45 @@ export default function App() {
             <Undo2 size={15} />
             <span>{hasRoyalUndo ? (lang === 'fa' ? 'فرمان لغو 👑' : 'Royal Undo 👑') : t.undo}</span>
           </button>
+        </div>
+
+        {/* Automated AI Strategy Advisor (Powered by Gemini) */}
+        <div className="w-full space-y-2">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleConsultAiOracle}
+              disabled={loadingAiTip || isGameOver}
+              className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-950 via-[#1c271e] to-amber-950/80 hover:from-emerald-900 hover:to-amber-900 border border-emerald-500/60 text-emerald-200 text-xs font-bold shadow-lg transition-all active:scale-98 cursor-pointer disabled:opacity-50"
+            >
+              <Sparkles size={14} className={loadingAiTip ? 'animate-spin text-amber-400' : 'text-emerald-400'} />
+              <span>
+                {loadingAiTip
+                  ? (lang === 'fa' ? 'در حال مشورت با هوش مصنوعی (Gemini)...' : 'Consulting AI Oracle...')
+                  : (lang === 'fa' ? 'پیشنهاد و تدبیر هوش مصنوعی (Gemini AI)' : 'Consult AI Oracle')}
+              </span>
+            </button>
+            {aiTip && (
+              <button
+                onClick={() => setAiTip(null)}
+                className="px-2.5 py-2 rounded-xl bg-stone-900 text-stone-400 hover:text-white text-xs border border-stone-800 cursor-pointer"
+                title={lang === 'fa' ? 'بستن' : 'Dismiss'}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {aiTip && (
+            <div className="p-3 rounded-xl bg-[#162218] border border-emerald-500/50 text-xs text-emerald-100 shadow-md flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1">
+              <span className="text-base leading-none">🔮</span>
+              <div className="leading-relaxed flex-1">
+                <span className="text-amber-300 font-bold block mb-0.5">
+                  {lang === 'fa' ? 'دیدگاه استراتژیک هوش مصنوعی:' : 'Strategic Oracle Advice:'}
+                </span>
+                {aiTip}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Move History */}
@@ -968,8 +1141,17 @@ export default function App() {
         onClose={() => setShowCivilizations(false)}
         currentPieceStyle={pieceStyle}
         currentBoardTheme={boardTheme}
+        enableMetallurgy={enableMetallurgy}
+        onToggleMetallurgy={handleToggleMetallurgy}
         onSelectCivilization={handleSelectCivilization}
         t={t}
+        lang={lang}
+      />
+
+      {/* Android APK & Release Center Modal */}
+      <AndroidBuildModal
+        isOpen={showAndroidModal}
+        onClose={() => setShowAndroidModal(false)}
         lang={lang}
       />
     </div>

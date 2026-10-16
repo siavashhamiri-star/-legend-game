@@ -6,6 +6,7 @@ interface CapturedPiecesProps {
   capturedWhite: PieceType[]; // pieces captured from White (Black has captured them)
   capturedBlack: PieceType[]; // pieces captured from Black (White has captured them)
   pieceStyle: PieceStyle;
+  enableMetallurgy?: boolean;
 }
 
 const PIECE_WEIGHTS: Record<PieceType, number> = {
@@ -20,7 +21,8 @@ const PIECE_WEIGHTS: Record<PieceType, number> = {
 export const CapturedPieces: React.FC<CapturedPiecesProps> = ({
   capturedWhite,
   capturedBlack,
-  pieceStyle
+  pieceStyle,
+  enableMetallurgy = false
 }) => {
   const whiteScore = capturedBlack.reduce((acc, p) => acc + PIECE_WEIGHTS[p], 0);
   const blackScore = capturedWhite.reduce((acc, p) => acc + PIECE_WEIGHTS[p], 0);
@@ -38,7 +40,7 @@ export const CapturedPieces: React.FC<CapturedPiecesProps> = ({
         <div className="flex items-center -space-x-1.5">
           {sortPieces(capturedBlack).map((type, idx) => (
             <div key={`b-${type}-${idx}`} className="w-5 h-5 flex-shrink-0">
-              <ChessPiece type={type} color="b" style={pieceStyle} />
+              <ChessPiece type={type} color="b" style={pieceStyle} enableMetallurgy={enableMetallurgy} />
             </div>
           ))}
         </div>
@@ -59,7 +61,7 @@ export const CapturedPieces: React.FC<CapturedPiecesProps> = ({
         <div className="flex items-center -space-x-1.5">
           {sortPieces(capturedWhite).map((type, idx) => (
             <div key={`w-${type}-${idx}`} className="w-5 h-5 flex-shrink-0">
-              <ChessPiece type={type} color="w" style={pieceStyle} />
+              <ChessPiece type={type} color="w" style={pieceStyle} enableMetallurgy={enableMetallurgy} />
             </div>
           ))}
         </div>

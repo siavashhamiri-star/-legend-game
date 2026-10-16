@@ -165,5 +165,20 @@ export const CIVILIZATIONS: Civilization[] = [
     descriptionFa: 'عصر شکوه گورکانیان، باغ‌های مغولی و تاج‌محل؛ فیل‌های زره‌پوش جنگی با هودج زرین، برج‌های قلعه سرخ آگره به جای رخ، بیربال و دانایان دربار به عنوان فیل، و کمانداران دلاور گورکانی به عنوان پیاده.',
     descriptionEn: 'Golden Mughal era of Agra & the Taj Mahal; Royal armored war elephants, Red Fort rampart rooks, Sage courtiers & Birbal bishops, and Gurkani warrior pawns.',
     bannerColor: 'from-emerald-700 via-amber-600 to-red-700'
+  },
+  {
+    id: 'russia',
+    nameFa: 'امپراتوری تزارها و اساتید شطرنج روسیه',
+    nameEn: 'Imperial Tsardom of Russia & Chess Masters',
+    flag: '🇷🇺',
+    country: 'Russia / Tsardom',
+    kingNameFa: 'تزار پتر کبیر (با ردای سلطنتی و کلاه مونوماخ)',
+    kingNameEn: 'Tsar Peter the Great (Imperial Romanov Crown)',
+    queenNameFa: 'کاترین کبیر (ملکه قدرتمند با تاج الماس سن پترزبورگ)',
+    queenNameEn: 'Empress Catherine the Great (Diamond Imperial Tiara)',
+    boardTheme: 'hermitage',
+    descriptionFa: 'مهد استادان نامدار شطرنج جهان؛ برج اسپاسکایا کرملین و گنبدهای پیازی سن باسیل به جای رخ، پهلوان بوگاتیر و اسب قزاق به عنوان اسب، اسقف ارتدکس با عصای زرین به عنوان فیل، و محافظان اشترلتسی با کلاه پوستین به عنوان پیاده.',
+    descriptionEn: 'Legendary homeland of world chess grandmasters; Spasskaya Kremlin Tower & Saint Basil domes as rooks, Bogatyr steed knights, Orthodox Patriarch bishops, and Streltsy fur-cap imperial pawns.',
+    bannerColor: 'from-blue-900 via-indigo-950 to-amber-600'
   }
 ];

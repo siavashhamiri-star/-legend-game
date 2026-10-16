@@ -38,12 +38,14 @@ export type BoardTheme =
   | 'fjords'
   | 'topkapi'
   | 'forbidden_city'
-  | 'taj_mahal';
+  | 'taj_mahal'
+  | 'hermitage';
 
 export type PieceStyle =
   | 'achaemenid'
   | 'india'
   | 'ottoman'
+  | 'russia'
   | 'china'
   | 'england'
   | 'rome'
@@ -52,6 +54,7 @@ export type PieceStyle =
   | 'japan'
   | 'arabia'
   | 'nordic'
+  | 'alchemy'
   | 'vector'
   | 'classic';
 
@@ -183,4 +186,31 @@ export interface TranslationDictionary {
   royalUndo: string;
   flagShield: string;
   youtube: string;
+  civilizationsBtn: string;
+  androidApkBtn: string;
+  indiaStyle: string;
+  russiaStyle: string;
+  ottomanStyle: string;
+  chinaStyle: string;
+  englandStyle: string;
+  romeStyle: string;
+  greeceStyle: string;
+  egyptStyle: string;
+  japanStyle: string;
+  arabiaStyle: string;
+  nordicStyle: string;
+  tajMahalTheme: string;
+  hermitageTheme: string;
+  topkapiTheme: string;
+  forbiddenCityTheme: string;
+  windsorTheme: string;
+  colosseumTheme: string;
+  parthenonTheme: string;
+  pyramidsTheme: string;
+  sakuraTheme: string;
+  petraTheme: string;
+  fjordsTheme: string;
+  alchemyStyle: string;
+  metallurgyFusion: string;
+  metallurgyDesc: string;
 }

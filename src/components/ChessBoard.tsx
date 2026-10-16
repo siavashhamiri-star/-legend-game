@@ -11,6 +11,7 @@ interface ChessBoardProps {
   flipped: boolean;
   theme: BoardTheme;
   pieceStyle: PieceStyle;
+  enableMetallurgy?: boolean;
   onSquareClick: (square: Square) => void;
   isGameOver: boolean;
 }
@@ -97,6 +98,11 @@ const THEMES: Record<BoardTheme, { light: string; dark: string; border: string }
     light: '#f8fafc',
     dark: '#065f46',
     border: '#d97706'
+  },
+  hermitage: {
+    light: '#f1f5f9',
+    dark: '#0f4c5c',
+    border: '#c77dff'
   }
 };
 
@@ -108,6 +114,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   flipped,
   theme,
   pieceStyle,
+  enableMetallurgy = false,
   onSquareClick,
   isGameOver,
 }) => {
@@ -235,6 +242,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                     type={piece.type}
                     color={piece.color}
                     style={pieceStyle}
+                    enableMetallurgy={enableMetallurgy}
                   />
                 </div>
               )}

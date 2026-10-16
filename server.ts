@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { GoogleGenAI } from '@google/genai';
 
 dotenv.config();
 
@@ -226,6 +227,63 @@ app.post('/api/verify-purchase', (req: Request, res: Response) => {
     unlockedItem: selected.name,
     coinsGranted: selected.coins
   });
+});
+
+// --- Fully Automated & Secure AI Strategic Advisor (Powered by Gemini 2.5 Flash) ---
+let aiClient: GoogleGenAI | null = null;
+try {
+  aiClient = new GoogleGenAI();
+} catch (e) {
+  console.log('[AI Oracle] Initialized with automatic credentials');
+}
+
+app.post('/api/ai-oracle', async (req: Request, res: Response) => {
+  const { fen, civilization, lastMove, lang } = req.body;
+  const isFa = lang !== 'en';
+
+  if (!aiClient) {
+    try {
+      aiClient = new GoogleGenAI();
+    } catch {
+      // safe fallback
+    }
+  }
+
+  if (!aiClient) {
+    return res.json({
+      success: true,
+      tip: isFa
+        ? 'مرکز صفحه را با پیاده‌ها کنترل کنید و اسب‌های خود را به سمت خانه‌های کلیدی گسترش دهید.'
+        : 'Control the center with your pawns and develop your knights to active squares.'
+    });
+  }
+
+  try {
+    const prompt = `You are the legendary historical grand strategist of the "${civilization || 'achaemenid'}" civilization in Worldplay Cultural Chess.
+The current board FEN is: "${fen || 'start'}". The last move played was: "${lastMove || 'opening'}".
+Provide a brief, inspiring 1-2 sentence tactical recommendation and royal lore insight for the current player.
+Answer strictly in ${isFa ? 'Persian (Farsi)' : 'English'}. No markdown bullets, keep it under 35 words.`;
+
+    const response = await aiClient.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+
+    const tip = response.text?.trim() || (isFa ? 'با خرد و شجاعت گام بردارید؛ کنترل مرکز کلید پیروزی است.' : 'Control the center and guard your king.');
+
+    res.json({
+      success: true,
+      tip
+    });
+  } catch (err: any) {
+    console.error('[AI Oracle] Automated Gemini fallback:', err?.message || err);
+    res.json({
+      success: true,
+      tip: isFa
+        ? 'دیده‌بانی هوشمند: از مهره‌های سبک برای تصاحب خانه‌های میانی بهره بگیرید و شاه را با قلعه‌رفتن محافظت کنید.'
+        : 'Tactical hint: Secure the king via castling and keep knight outpost active.'
+    });
+  }
 });
 
 // --- Vite / Static Files Middleware ---
